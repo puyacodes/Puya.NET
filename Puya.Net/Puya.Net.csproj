@@ -96,7 +96,4 @@
 		<Folder Include="Localization\Localization\cdt\" />
 	</ItemGroup>
 
-	<Target Name="NugetPackAutoVersioning" AfterTargets="Build">
-		<Exec Command="dotnet pack -p:PackageVersion=$(PackageVersion) --no-build --configuration $(Configuration) --output &quot;$(SolutionDir)nuget" />
-	</Target>
 </Project>
