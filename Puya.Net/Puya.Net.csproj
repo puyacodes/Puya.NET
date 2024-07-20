@@ -17,6 +17,11 @@
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 		<Copyright>2018-2024</Copyright>
 		<RepositoryType>https://github.com/puyacodes/Puya.NET</RepositoryType>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/puyacodes/Puya.NET</RepositoryUrl>
+		<PackageTags>Puyasoft, Tap, Tarh Andishan Puya, Puya, .Net</PackageTags>
+		<PackageReleaseNotes>This is the first public release of Puya.NET package.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -59,6 +64,8 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>ToEnum.cs</LastGenOutput>
 		</None>
+		<None Include="..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt"/>
+		<None Include="..\README.md" Pack="true" PackagePath="README.md"/>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -88,4 +95,8 @@
 	<ItemGroup>
 		<Folder Include="Localization\Localization\cdt\" />
 	</ItemGroup>
+
+	<Target Name="NugetPackAutoVersioning" AfterTargets="Build">
+		<Exec Command="dotnet pack -p:PackageVersion=$(PackageVersion) --no-build --configuration $(Configuration) --output &quot;$(SolutionDir)nuget" />
+	</Target>
 </Project>
