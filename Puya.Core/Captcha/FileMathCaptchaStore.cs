@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Puya.Extensions;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -40,7 +41,7 @@ namespace Puya.Captcha
         }
         private void Save()
         {
-            var content = JsonConvert.SerializeObject(store, Formatting.Indented);
+            var content = store.SafeSerialize();
             var path = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             path = Path.Combine(path, FileName);
 

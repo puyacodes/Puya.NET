@@ -11,7 +11,6 @@ using Puya.Conversion;
 using Puya.Data;
 using Puya.Extensions;
 using Puya.Mail;
-using Puya.Service;
 using Puya.Sms;
 
 namespace Puya.MessageNotification
@@ -149,8 +148,13 @@ end catch
                                     case NotificationType.Sms:
                                         logger.LogDebug($"sending sms: target: {task.Target}, message: {task.Content}");
 
-                                        var sms = serviceProvider.GetService<ISmsService>();
-                                        var sr = await sms.SendAsync(task.Target, task.Content, stoppingToken);
+                                        var sms = serviceProvider.GetService<ISmsProvider>();
+                                        var req = new SmsSendRequest
+                                        {
+                                            Mobile = task.Target,
+                                            Message = task.Content
+                                        };
+                                        var sr = await sms.SendAsync(req, stoppingToken);
 
                                         succeeded = sr.IsSucceeded();
 

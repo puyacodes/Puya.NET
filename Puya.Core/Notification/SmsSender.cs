@@ -1,21 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Puya.Sms;
 
 namespace Puya.Notification
 {
     public class SmsSender
     {
-        private readonly ISmsService sms;
+        private readonly ISmsProvider sms;
 
-        public SmsSender(ISmsService sms)
+        public SmsSender(ISmsProvider sms)
         {
             this.sms = sms;
         }
-        public void Send(string mobile, string message)
+        public Task SendAsync(string mobile, string message)
         {
-            var sr = sms.Send(mobile, message);
+            return sms.SendAsync(new SmsSendRequest { Mobile = mobile, Message = message }, CancellationToken.None);
         }
     }
 }

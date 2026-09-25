@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Puya.Extensions;
 
 namespace Puya.Logging
 {
@@ -7,14 +8,10 @@ namespace Puya.Logging
         public string Format(Log log)
         {
             var _log = new Log(log);
-            var settings = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
+            
             _log.Data = log.GetData == null ? log.Data : log.GetData();
 
-            return JsonConvert.SerializeObject(log, Formatting.Indented, settings);
+            return log.SafeSerialize();
         }
     }
 }

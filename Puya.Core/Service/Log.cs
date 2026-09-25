@@ -8,7 +8,7 @@ namespace Puya.Service
     }
     public enum LogSource
     {
-        System, Framework, App, Db, Service, Lib, Model, View
+        System, Framework, App, Db, Service, Lib, Model, View, Middleware, EventHandler, Controller, Repository, Other
     }
     public class Log
     {

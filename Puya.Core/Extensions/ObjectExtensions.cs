@@ -1,4 +1,5 @@
-﻿using Puya.Base;
+﻿using Newtonsoft.Json.Linq;
+using Puya.Base;
 using Puya.Collections;
 using Puya.Extensions;
 using Puya.Reflection;
@@ -504,6 +505,91 @@ namespace Puya.Extensions
             {
                 return true;
             }
+        }
+        public static void Print(this object x, bool ignoreNulls = true)
+        {
+            Console.WriteLine(Stringify(x, ignoreNulls));
+        }
+        public static string Stringify(this object x, bool ignoreNulls = true)
+        {
+            var sb = new StringBuilder();
+
+            if (x != null)
+            {
+                var type = x.GetType();
+
+                if (type.IsNullableOrBasicType())
+                {
+                    sb.Append(x.ToString());
+                }
+                else if (type.IsDictionary())
+                {
+                    var dic = x as IDictionary;
+
+                    foreach (var key in dic.Keys)
+                    {
+                        var value = dic[key];
+
+                        if (value != null || !ignoreNulls)
+                        {
+                            sb.Append(key?.ToString());
+                            sb.Append(": ");
+
+                            var str = Stringify(value);
+
+                            sb.Append(str);
+
+                            if (!str.EndsWith(Environment.NewLine))
+                            {
+                                sb.Append(Environment.NewLine);
+                            }
+                        }
+                    }
+                }
+                else if (type.Implements<IEnumerable>())
+                {
+                    var e = x as IEnumerable;
+
+                    foreach (var item in e)
+                    {
+                        if (item != null || !ignoreNulls)
+                        {
+                            var str = Stringify(item);
+
+                            sb.Append(str);
+
+                            if (!str.EndsWith(Environment.NewLine))
+                            {
+                                sb.Append(Environment.NewLine);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    ReflectionHelper.ForEachPublicInstanceReadableNotIgnorableProperty(type, prop =>
+                    {
+                        var value = prop.GetValue(x);
+
+                        if (value != null || !ignoreNulls)
+                        {
+                            sb.Append(prop.Name);
+                            sb.Append(": ");
+
+                            var str = Stringify(value);
+
+                            sb.Append(str);
+
+                            if (!str.EndsWith(Environment.NewLine))
+                            {
+                                sb.Append(Environment.NewLine);
+                            }
+                        }
+                    });
+                }
+            }
+
+            return sb.ToString();
         }
     }
 }

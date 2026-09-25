@@ -7,6 +7,7 @@ using Puya.Collections;
 using Puya.Service;
 using System.Threading.Tasks;
 using System.Threading;
+using Puya.Extensions;
 
 namespace Puya.Data
 {
@@ -49,7 +50,7 @@ namespace Puya.Data
 		{
 			if (data != null)
 			{
-				contextInfo.SetContextInfo(JsonConvert.SerializeObject(data));
+				contextInfo.SetContextInfo(data.SafeSerialize(false));
 			}
 		}
         #region ExecuteReaderDynamic

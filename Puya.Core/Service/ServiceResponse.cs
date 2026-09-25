@@ -143,17 +143,7 @@ namespace Puya.Service
 
             if (Exception != null)
             {
-                try
-                {
-                    exception = ",\"Exception\": " + JsonConvert.SerializeObject(Exception);
-                }
-                catch (Exception e)
-                {
-                    exception = $@", ""Exception"": {{
-        ""Message"": ""{Exception.ToString("\n").Replace("\"", "'")}"",
-        ""StackTrace"": ""{e.StackTrace.Replace("\"", "'")}""
-    }}";
-                }
+                exception = ",\"Exception\": " + Exception.SafeSerialize();
             }
 
             var info = "";
@@ -172,7 +162,7 @@ namespace Puya.Service
 
                 if (dataValue != null)
                 {
-                    data = ",\"Data\": " + JsonConvert.SerializeObject(dataValue);
+                    data = ",\"Data\": " + dataValue.SafeSerialize();
                 }
             }
 
@@ -180,7 +170,7 @@ namespace Puya.Service
 
             if (Logs?.Count > 0)
             {
-                logs = ",\"Logs\": " + JsonConvert.SerializeObject(Logs);
+                logs = ",\"Logs\": " + Logs.SafeSerialize();
             }
 
             var result = $@"{{""Success"": {Success.ToString().ToLower()},""Status"": ""{Status}"", ""Date"":""{Date:yyyy/MM/dd HH:mm:ss.fffffff}"",""Message"": ""{HttpUtility.JavaScriptStringEncode(Message)}""{data}{info}{exception}{_innerResponses}{logs}}}";

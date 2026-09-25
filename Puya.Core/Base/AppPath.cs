@@ -1,5 +1,6 @@
 ﻿using Puya.Extensions;
 using System;
+using System.IO;
 
 namespace Puya.Base
 {
@@ -26,6 +27,28 @@ namespace Puya.Base
 
                 return result;
             }
+        }
+        public static string GetPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                path = AppPath.Root;
+            }
+            else
+            {
+                if (!Path.IsPathRooted(path))
+                {
+                    path = AppPath.Root + "\\" + path;
+                }
+            }
+
+            return path;
+        }
+        public static string GetFilePath(string path, string filename, string defualtFileName = "")
+        {
+            var _filename = string.IsNullOrEmpty(filename) ? defualtFileName : filename;
+
+            return Path.Combine(GetPath(path), _filename);
         }
     }
 }

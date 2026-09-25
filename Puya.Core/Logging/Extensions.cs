@@ -1549,20 +1549,7 @@ namespace Puya.Logging
             var result = string.Empty;
             var obj = log.GetData == null ? log.Data : log.GetData();
 
-            if (obj != null)
-            {
-                try
-                {
-                    var settings = new JsonSerializerSettings
-                    {
-                        NullValueHandling = NullValueHandling.Ignore
-                    };
-
-                    result = JsonConvert.SerializeObject(obj, Formatting.Indented, settings);
-                }
-                catch
-                { }
-            }
+            result = obj.SafeSerialize();
 
             return result;
         }

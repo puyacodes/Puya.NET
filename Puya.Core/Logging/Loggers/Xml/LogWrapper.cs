@@ -49,10 +49,7 @@ namespace Puya.Logging
 
             var data = log.GetData == null ? log.Data : log.GetData();
 
-            Data = data == null ? null : JsonConvert.SerializeObject(data, Formatting.Indented, new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            });
+            Data = data.SafeSerialize();
 
             Method = log.Method;
             Url = log.Url;

@@ -1,8 +1,10 @@
-﻿using Puya.Base;
+﻿using Newtonsoft.Json.Linq;
+using Puya.Base;
 using Puya.Collections;
 using Puya.Conversion;
 using Puya.Data;
 using Puya.Reflection;
+using Puya.Service;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -594,9 +596,6 @@ namespace Puya.Extensions
             return source.ToDictionary<TSource, TKey, TElement>(targetFactory, keySelector, elementSelector, (IEqualityComparer<TKey>)null);
         }
 
-
-
-
         public static IDictionary<TKey, TSource> ToDictionary<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
         {
             return source.ToDictionary<TSource, TKey, TSource>(keySelector, IdentityFunction<TSource>.Instance, (IEqualityComparer<TKey>)null);
@@ -609,8 +608,6 @@ namespace Puya.Extensions
         {
             return source.ToDictionary<TSource, TKey, TSource>(targetFactory, keySelector, IdentityFunction<TSource>.Instance, (IEqualityComparer<TKey>)null);
         }
-
-
 
         public static IDictionary<TKey, TSource> ToDictionary<TSource, TKey>(
             this IEnumerable<TSource> source,
@@ -788,11 +785,33 @@ namespace Puya.Extensions
 
             return result;
         }
-        public static T To<T>(this DynamicModel model)
+        public static T To<T>(this IDictionary<string, object> model)
         {
             return (T)model.To(typeof(T));
         }
-        public static object To(this DynamicModel model, Type type)
+        public static T To<T>(this IDictionary<string, string> model)
+        {
+            return (T)model.To(typeof(T));
+        }
+        public static object To(this IDictionary<string, object> model, Type type)
+        {
+            return To(model, type, null);
+        }
+        public static object To(this IDictionary<string, string> model, Type type)
+        {
+            var dic = new DynamicModel();
+
+            if (model != null)
+            {
+                foreach (var item in model)
+                {
+                    dic.Add(item.Key, item.Value);
+                }
+            }
+
+            return To(dic, type);
+        }
+        public static object To(this IDictionary<string, object> model, Type type, ILogProvider logProvider)
         {
             var result = null as object;
 
@@ -800,34 +819,59 @@ namespace Puya.Extensions
             {
                 result = ObjectActivator.Instance.Activate(type);
 
-                ReflectionHelper.ForEachPublicInstanceReadableNotIgnorableProperty(type, prop =>
+                if (result != null)
                 {
-                    if (model.ContainsKey(prop.Name))
+                    ReflectionHelper.ForEachPublicInstanceWritableProperty(type, prop =>
                     {
-                        var value = model[prop.Name];
-
-                        try
+                        if (model.ContainsKey(prop.Name))
                         {
-                            if (value != null)
-                            {
-                                value = SafeClrConvert.ChangeType(value, prop.PropertyType);
+                            var value = model[prop.Name];
 
-                                prop.SetValue(result, value);
-                            }
-                            else
+                            try
                             {
-                                prop.SetValue(result, ObjectActivator.Instance.Activate(prop.PropertyType));
+                                if (value != null)
+                                {
+                                    value = SafeClrConvert.ChangeType(value, prop.PropertyType);
+
+                                    prop.SetValue(result, value);
+                                }
+                                else
+                                {
+                                    prop.SetValue(result, ObjectActivator.Instance.Activate(prop.PropertyType));
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                logProvider?.Error("To() extension method", "map prop failed", e, new { prop = prop.Name, value, type = prop.PropertyType.Name });
                             }
                         }
-                        catch (Exception e)
+                        else
                         {
-                            Debug.WriteLine($"Prop = {prop.Name}, Value = {value}, Value Type = {value?.GetType().Name}: {e.Message}");
+                            logProvider?.Debug("To() extension method", "missing prop in model", new { prop = prop.Name });
                         }
-                    }
-                });
+                    });
+                }
+                else
+                {
+                    logProvider?.Debug("To() extension method", $"instantiating {type.Name} type failed");
+                }
             }
 
             return result;
+        }
+        public static object To(this IDictionary<string, string> model, Type type, ILogProvider logProvider)
+        {
+            var dic = new DynamicModel();
+
+            if (model != null)
+            {
+                foreach (var item in model)
+                {
+                    dic.Add(item.Key, item.Value);
+                }
+            }
+
+            return To(dic, type, logProvider);
         }
         public static DynamicModel NormalizeKeys(this DynamicModel model)
         {
@@ -881,6 +925,21 @@ namespace Puya.Extensions
                 var ca = value as CommandParameter;
 
                 result = SafeClrConvert.ToBoolean(ca?.Value ?? value);
+            }
+
+            return result;
+        }
+        public static bool Has(this DynamicStringModel stringDictionary, string key, string value, bool ignoreCase = true)
+        {
+            return ((IDictionary<string, string>)stringDictionary).Has(key, value, ignoreCase);
+        }
+        public static bool Has(this IDictionary<string, string> dictionary, string key, string value, bool ignoreCase = true)
+        {
+            var result = false;
+
+            if (dictionary?.ContainsKey(key) ?? false)
+            {
+                result = string.Compare(dictionary[key], value, ignoreCase) == 0;
             }
 
             return result;

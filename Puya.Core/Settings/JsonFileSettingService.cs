@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Puya.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,7 +29,7 @@ namespace Puya.Settings
         }
         protected override bool Save()
         {
-            var content = JsonConvert.SerializeObject(_items, AutoFormat ? Formatting.Indented: Formatting.None);
+            var content = _items.SafeSerialize(AutoFormat);
             var result = false;
 
             try

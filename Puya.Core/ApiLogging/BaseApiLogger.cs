@@ -1,10 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Puya.Extensions;
 
@@ -52,38 +46,9 @@ namespace Puya.ApiLogging
         public abstract void Log(ApiLog log);
 
         public abstract Task LogAsync(ApiLog log, CancellationToken cancellation);
-        protected string Serialize(object obj)
+        protected virtual string Serialize(object obj)
         {
-            if (obj == null)
-            {
-                return string.Empty;
-            }
-
-            try
-            {
-                return JsonConvert.SerializeObject(obj, Formatting.None, new JsonSerializerSettings
-                {
-                    NullValueHandling = NullValueHandling.Ignore
-                });
-            }
-            catch
-            {
-                try
-                {
-                    var sb = new StringBuilder();
-
-                    foreach (var prop in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.CanRead))
-                    {
-                        sb.Append((sb.Length > 0 ? ", " : "") + $"{prop.Name}: {prop.GetValue(obj)?.ToString()}");
-                    }
-
-                    return $"Newtonsoft serialization failed; Manual serialization: {{{sb}}}";
-                }
-                catch
-                {
-                    return $"Serialization failed";
-                }
-            }
+            return obj.SafeSerialize();
         }
     }
 }

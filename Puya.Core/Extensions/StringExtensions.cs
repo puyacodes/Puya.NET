@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Puya.Collections;
+using Puya.Reflection;
+using System.Collections;
 
 namespace Puya.Extensions
 {
@@ -1071,6 +1073,119 @@ namespace Puya.Extensions
             }
 
             return result;
+        }
+        static string _SafeSerialize(object x, Formatting formatting, JsonSerializerSettings settings, Stack<object> stack)
+        {
+            if (x == null)
+                return "null";
+
+            var result = string.Empty;
+
+            try
+            {
+                result = JsonConvert.SerializeObject(x, formatting, settings);
+            }
+            catch
+            {
+                var sb = new StringBuilder();
+                var type = x.GetType();
+
+                if (type.IsBasicType())
+                {
+                    result = JsonConvert.SerializeObject(x);
+                }
+                else
+                if (type.IsDictionary())
+                {
+                    stack.Push(x);
+
+                    x.IterateDictionary((index, keyValuePair) =>
+                    {
+                        sb.Append($"{(sb.Length == 0 ? "" : ", ")}\"{keyValuePair.Key}\": {_SafeSerialize(keyValuePair.Value, formatting, settings, stack)}");
+                    });
+
+                    stack.Pop();
+
+                    result = "{" + sb + "}";
+                }
+                else
+                if (type.IsEnumerable())
+                {
+                    var enumerable = x as IEnumerable;
+
+                    if (enumerable != null)
+                    {
+                        var first = true;
+
+                        foreach (var item in enumerable)
+                        {
+                            if (!first)
+                            {
+                                sb.Append(", ");
+                            }
+
+                            sb.Append(_SafeSerialize(item, formatting, settings, stack));
+
+                            first = false;
+                        }
+
+                        result = "[" + sb + "]";
+                    }
+                }
+                else
+                {
+                    stack.Push(x);
+
+                    ReflectionHelper.ForEachPublicInstanceReadableProperty(type, prop =>
+                    {
+                        var value = prop.GetValue(x);
+
+                        if (!stack.Contains(value))
+                        {
+                            sb.Append($"{(sb.Length == 0 ? "" : ", ")}\"{prop.Name}\": {_SafeSerialize(value, formatting, settings, stack)}");
+                        }
+                    });
+
+                    stack.Pop();
+
+                    result = "{" + sb + "}";
+                }
+            }
+
+            return result;
+        }
+        public static string SafeSerialize(this object x, Formatting formatting, JsonSerializerSettings settings)
+        {
+            if (x == null)
+            {
+                return string.Empty;
+            }
+
+            var stack = new Stack<object>();
+            
+            return _SafeSerialize(x, formatting, settings, stack);
+        }
+        public static string SafeSerialize(this object x, bool format = true)
+        {
+            if (x == null)
+            {
+                return string.Empty;
+            }
+
+            var stack = new Stack<object>();
+
+            if (format)
+            {
+                return _SafeSerialize(x, Formatting.Indented, new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    Converters = new List<JsonConverter> { new Newtonsoft.Json.Converters.StringEnumConverter() }
+                }, stack);
+            }
+            else
+            {
+                return _SafeSerialize(x, Formatting.None, null, stack);
+            }
         }
         public static T SafeDeserialize<T>(this string x, T @default = default)
         {
