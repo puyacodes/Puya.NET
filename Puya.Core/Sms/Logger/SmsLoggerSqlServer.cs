@@ -38,7 +38,8 @@ insert into {GetLogTableName()}
     Status,
     RefCode,
     Success,
-    Error
+    Error,
+    Data
 )
 values
 (
@@ -53,7 +54,8 @@ values
     @Status,
     @RefCode,
     @Success,
-    @Error
+    @Error,
+    @Data
 )";
         }
         protected virtual object GetInsertArgs(SmsLog log)
@@ -71,7 +73,8 @@ values
                 log.Status,
                 log.RefCode,
                 log.Success,
-                Error = log.Error.SafeSerialize()
+                Error = log.Error.SafeSerialize(),
+                Data = log.Data.SafeSerialize()
             };
         }
         public void Log(SmsLog log)
