@@ -77,20 +77,20 @@ values
                 Data = log.Data.SafeSerialize()
             };
         }
-        public void Log(SmsLog log)
+        public virtual void Log(SmsLog log)
         {
             log.LogDate = now.Value;
 
             db.ExecuteNonQuerySql(GetInsertQuery(), GetInsertArgs(log));
         }
-        public Task LogAsync(SmsLog log, CancellationToken cancellation)
+        public virtual Task LogAsync(SmsLog log, CancellationToken cancellation)
         {
             log.LogDate = now.Value;
 
             return db.ExecuteNonQuerySqlAsync(GetInsertQuery(), GetInsertArgs(log), cancellation);
         }
 
-        public async Task<SmsLogGetPageResponse> GetPage(SmsLogGetPageRequest request, CancellationToken cancellation)
+        public virtual async Task<SmsLogGetPageResponse> GetPage(SmsLogGetPageRequest request, CancellationToken cancellation)
         {
             var where = $@"
 where 1 = 1

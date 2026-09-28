@@ -25,6 +25,10 @@ namespace Puya.Collections
         { }
         public DynamicModel(IEqualityComparer<string> comparer, bool ignoreNotExistingKeys): base(comparer, ignoreNotExistingKeys)
         { }
+        public DynamicModel(IDictionary<string, object> dic): base(dic)
+        { }
+        public DynamicModel(IEnumerable<KeyValuePair<string, object>> items): base(items)
+        { }
     }
     public class DynamicModel<T> : DynamicObject, IDictionary<string, T>
     {
@@ -43,6 +47,26 @@ namespace Puya.Collections
 
             props = new Dictionary<string, T>(comparer);
             IgnoreNotExistingKeys = ignoreNotExistingKeys;
+        }
+        public DynamicModel(IDictionary<string, T> dic): this(null, true)
+        {
+            if (dic != null)
+            {
+                foreach (var item in dic)
+                {
+                    Add(item.Key, item.Value);
+                }
+            }
+        }
+        public DynamicModel(IEnumerable<KeyValuePair<string, T>> items) : this(null, true)
+        {
+            if (items != null)
+            {
+                foreach (var item in items)
+                {
+                    Add(item.Key, item.Value);
+                }
+            }
         }
         public int Count
         {

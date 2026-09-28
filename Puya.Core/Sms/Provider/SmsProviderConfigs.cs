@@ -1,36 +1,36 @@
-﻿using Puya.Collections;
-using Puya.Extensions;
+﻿using Puya.Extensions;
 using Puya.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Puya.Sms
 {
-    public class SmsProviderConfigs : List<DynamicStringModel>
+    public class SmsProviderConfigs : List<SmsProviderBaseConfig>
     {
-        public DynamicStringModel GetConfig(string type)
+        public SmsProviderBaseConfig GetConfig(string type)
         {
-            var result = this.FirstOrDefault(x => x["Type"].Equalz(type));
+            var result = this.FirstOrDefault(x => x.Type.Equalz(type));
 
             return result;
         }
-        public DynamicStringModel GetActive()
+        public SmsProviderBaseConfig GetActive()
         {
-            var result = this.FirstOrDefault(x => x["Active"].Equalz("true"));
+            var result = this.FirstOrDefault(x => x.Active);
 
             if (result == null)
             {
                 result = this.FirstOrDefault();
-
-                if (result == null)
-                {
-                    result = new DynamicStringModel();
-                }
             }
 
             return result;
         }
-        void Map<T>(DynamicStringModel source, T target)
+        public string GetActiveProvider()
+        {
+            var active = GetActive();
+
+            return active?.Type;
+        }
+        void Map<T>(SmsProviderBaseConfig source, T target)
         {
             if (source != null && source.Count > 0)
             {
@@ -49,9 +49,9 @@ namespace Puya.Sms
         }
         public T GetConfig<T>(int i) where T : new()
         {
-            var result = new T();
+            var result = default(T);
 
-            if (i < 0 || i >= Count)
+            if (i >= 0 && i < Count)
             {
                 var item = this[i];
 
@@ -62,7 +62,7 @@ namespace Puya.Sms
         }
         public T GetConfig<T>(string type) where T : new()
         {
-            var result = new T();
+            var result = default(T);
             var item = GetConfig(type);
 
             Map(item, result);
