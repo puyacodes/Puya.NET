@@ -32,16 +32,23 @@ namespace Puya.Sms
 
         public Task<SmsLogGetPageResponse> GetPage(SmsLogGetPageRequest request, CancellationToken cancellation)
         {
+            if (request == null)
+            {
+                return Task.FromResult(new SmsLogGetPageResponse());
+            }
+
             var filepath = AppPath.GetFilePath(Config?.Path, Config?.FileName, "sms.log.json");
             var content = File.ReadAllText(filepath);
             var logs = content.SafeDeserialize<List<SmsLog>>() ?? new List<SmsLog>();
+            
+            request.Validate();
 
-            if (request.Ascending)
+            if (request.OrderDir.Equalz("asc"))
                 logs.Sort((x, y) => x.LogDate.CompareTo(y.LogDate));
             else
                 logs.Sort((x, y) => y.LogDate.CompareTo(x.LogDate));
 
-            var items = logs.Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize);
+            var items = logs.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize);
 
             var result = new SmsLogGetPageResponse
             {

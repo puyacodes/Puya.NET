@@ -1,16 +1,19 @@
-﻿using Puya.Date;
+﻿using Puya.Data;
+using Puya.Date;
 using Puya.Service;
 
 namespace Puya.Sms
 {
     public class SmsProviderFactoryDefault : ISmsProviderFactory
     {
-        private readonly ISmsLogger logger;
+        private readonly ILogProvider logProvider;
+        private readonly IDb db;
         private readonly INow now;
 
-        public SmsProviderFactoryDefault(ISmsLogger logger, INow now)
+        public SmsProviderFactoryDefault(ILogProvider logProvider, IDb db, INow now)
         {
-            this.logger = logger;
+            this.logProvider = logProvider;
+            this.db = db;
             this.now = now;
         }
         public virtual ISmsProvider GetProvider(string type)
@@ -31,8 +34,8 @@ namespace Puya.Sms
                     return new JsonFileSmsProvider(new JsonFileSmsProviderConfig(), now);
                 case "memory":
                     return new MemorySmsProvider();
-                case "db":
-                    return new DbSmsProvider(logger);
+                case "sqlserver":
+                    return new SqlServerSmsProvider(logProvider, db, now);
                 default:
                     throw new System.Exception($"Sms provider type '{type}' is not supported.");
             }

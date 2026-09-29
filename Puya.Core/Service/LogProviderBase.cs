@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Puya.Debugging;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace Puya.Service
@@ -8,12 +9,13 @@ namespace Puya.Service
         public LogList Logs { get; set; }
         int Depth;
 
-        public LogProviderBase(): this(new LogProviderOptions())
+        public LogProviderBase(): this(new NoDebugger(), new LogProviderOptions())
         { }
-        public LogProviderBase(LogProviderOptions options)
+        public LogProviderBase(IDebugger debugger, LogProviderOptions options)
         {
             Depth = 1;
             Logs = new LogList();
+            Debugger = debugger;
             this.options = options;
         }
         public void EnterScope()
@@ -31,9 +33,17 @@ namespace Puya.Service
             get { return options ?? new LogProviderOptions(); }
             set { options = value; }
         }
+
+        public IDebugger Debugger { get; }
+
         public bool CanLog(string level)
         {
-            return Options.Includes(level) && !Options.Excludes(level);
+            if (Debugger.IsDebugging)
+            {
+                return Options.Includes(level) && !Options.Excludes(level);
+            }
+
+            return false;
         }
         public void Info(string category,
                         string message,
