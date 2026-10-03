@@ -36,7 +36,7 @@ Category: {request.Category}
 Mobile: {request.Mobile}
 Message: {request.Message}
 TemplateCode: {request.TemplateCode}
-Parameters: {request.Parameters.Join("\n\t", (kvp, i) => $"{i}. {kvp.Key}: {kvp.Value}")}
+Parameters: {request.Parameters?.Join("\n\t", (kvp, i) => $"{i}. {kvp.Key}: {kvp.Value}")}
 Data: {request.OtherData.SafeSerialize()}
 {new string('-', 80)}");
 

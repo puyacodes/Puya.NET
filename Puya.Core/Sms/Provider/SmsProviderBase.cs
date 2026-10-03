@@ -63,54 +63,62 @@ namespace Puya.Sms
         public async Task<SmsSendResponse> SendAsync(SmsSendRequest request, CancellationToken cancellation)
         {
             var response = new SmsSendResponse();
-            var log = new SmsLog
-            {
-                Category = request.Category,
-                MobileNo = request.Mobile,
-                Message = request.Message,
-                Provider = Type,
-                Data = new { request.TemplateCode, request.Parameters, request.OtherData },
-            };
 
-            try
+            if (request != null)
             {
-                var sr = await SendInternalAsync(request, log, cancellation);
-
-                if (sr != null)
+                var log = new SmsLog
                 {
-                    log.Response = sr.Data?.Response;
-                    log.RefCode = sr.Data?.RefCode;
-                    log.Error = sr.Data?.Error;
+                    Category = request.Category,
+                    MobileNo = request.Mobile,
+                    Message = request.Message,
+                    Provider = Type,
+                    Data = new { request.TemplateCode, request.Parameters, request.OtherData },
+                };
 
-                    response.Copy(sr);
-                }
-                else
+                try
                 {
-                    response.Succeeded();
+                    var sr = await SendInternalAsync(request, log, cancellation);
+
+                    if (sr != null)
+                    {
+                        log.Response = sr.Data?.Response;
+                        log.RefCode = sr.Data?.RefCode;
+                        log.Error = sr.Data?.Error;
+
+                        response.Copy(sr);
+                    }
+                    else
+                    {
+                        response.Succeeded();
+                    }
                 }
+                catch (Exception e)
+                {
+                    log.Error = e;
+
+                    response.Failed(e);
+                }
+
+                log.Success = response.Success;
+                log.Status = response.Status;
+
+                if (_debugger?.IsDebugging ?? false)
+                {
+                    _logProvider?.Debug(GetType().Name, "Request", request, LogSource.Service);
+                    _logProvider?.Debug(GetType().Name, "Config", Config, LogSource.Service);
+                    _logProvider?.Info(GetType().Name, "Log", log, LogSource.Service);
+                }
+
+                try
+                {
+                    await Logger?.LogAsync(log, cancellation);
+                }
+                catch { }
             }
-            catch (Exception e)
+            else
             {
-                log.Error = e;
-
-                response.Failed(e);
+                response.SetStatus("NoRequest");
             }
-
-            log.Success = response.Success;
-            log.Status = response.Status;
-
-            if (_debugger.IsDebugging)
-            {
-                _logProvider?.Debug(GetType().Name ,"Request", request, LogSource.Service);
-                _logProvider?.Debug(GetType().Name ,"Config", Config, LogSource.Service);
-                _logProvider?.Info(GetType().Name , "Log", log, LogSource.Service);
-            }
-
-            try
-            {
-                await Logger?.LogAsync(log, cancellation);
-            }
-            catch { }
 
             return response;
         }
