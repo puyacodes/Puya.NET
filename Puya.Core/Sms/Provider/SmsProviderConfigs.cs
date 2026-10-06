@@ -40,7 +40,10 @@ namespace Puya.Sms
                     {
                         try
                         {
-                            prop.SetValue(target, source[prop.Name]);
+                            if (prop.CanWrite)
+                            {
+                                prop.SetValue(target, source[prop.Name]);
+                            }    
                         }
                         catch { }
                     }
@@ -54,6 +57,8 @@ namespace Puya.Sms
             if (i >= 0 && i < Count)
             {
                 var item = this[i];
+                
+                result = new T();
 
                 Map(item, result);
             }
@@ -65,7 +70,12 @@ namespace Puya.Sms
             var result = default(T);
             var item = GetConfig(type);
 
-            Map(item, result);
+            if (item != null)
+            {
+                result = new T();
+
+                Map(item, result);
+            }
 
             return result;
         }

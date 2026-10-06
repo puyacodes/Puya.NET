@@ -1,4 +1,6 @@
-﻿using Puya.Collections;
+﻿using Newtonsoft.Json;
+using Puya.Collections;
+using Puya.Debugging;
 using Puya.Extensions;
 using Puya.Logging;
 using Puya.Service;
@@ -13,12 +15,16 @@ namespace Puya.ConsoleTest
         public int Age { get; set; }
         public int Birth { get; set; }
     }
+    public class TestSmsProviderConfig : SmsProviderConfig
+    {
+        public override string Type => "kmc";
+    }
     internal class Program
     {
         static void test_logger(ILogger logger)
         {
             logger.Info("test", "hello");
-            
+
             logger.Debug("BeginJob", "this is a message", () => new { a = 10, b = true, c = "test" });
             logger.Log(new Logging.Log
             {
@@ -44,7 +50,7 @@ namespace Puya.ConsoleTest
                 Line = 18,
                 StackTrace = Environment.StackTrace
             });
-            
+
             logger.Error("an unexpected situation happened. please check logs!", new { size = 300, code = "iusyhdiluy87214" });
         }
         static void test_smslogger()
@@ -100,15 +106,41 @@ namespace Puya.ConsoleTest
 
             p.Print();
         }
+        static void test_debugging()
+        {
+            var d = new ManualDebugger(new Core.Debugging.DebuggerOptions { GlobalDebugging = true, DebuggingEnabled = true });
+
+            Console.WriteLine(d.IsDebugging);
+        }
+        static void test_smsconfigs()
+        {
+            try
+            {
+                var configs = new SmsProviderConfigs();
+                var item = JsonConvert.DeserializeObject<SmsProviderBaseConfig>("{ Type: 'kmc', EndPoint: 'http', UserName: 'tap', Password: 'pass' }");
+
+                configs.Add(item);
+                var cfg = configs.GetConfig<TestSmsProviderConfig>("kmc");
+                Console.WriteLine(cfg.SafeSerialize());
+                Console.WriteLine("done");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString("\n"));
+            }
+        }
         static void Main(string[] args)
         {
             //test_logger(new ConsoleLogger());
             //test_logger(new DebugLogger());
             //test_logger(new FreeConsoleLogger());
             //test_smslogger();
-            test_to();
+            //test_to();
+            //test_debugging();
+            //test_smsconfigs();
 
             //Console.WriteLine(new { name = "ali", age = 34 }.SafeSerialize(false));
+            
             Console.ReadKey();
         }
     }
